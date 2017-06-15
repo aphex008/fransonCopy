@@ -20,7 +20,8 @@
     "scripts":[
       "vendors/jquery-3.2.1.min.js",
       "app.js"
-    ]
+    ],
+    "persistent": false
   },
   "commands": {
     "copy-gps-location-to-clipboard": {

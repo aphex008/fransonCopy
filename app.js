@@ -5,9 +5,10 @@ var textToPutOnClipboard;
  */
 function sendAjaxRequest() {
     var nocache = ((new Date()).getTime().toString().substr(5));
-    $.get('http://localhost:12175/gps/getGpsInfo?jsonp=CallbackMessage&noCache=' + nocache)
+    $.get('http://localhost:12175/gps/getGpsInfo?noCache=' + nocache)
         .done(function (data) {
-            eval(data);
+            var jsonData = eval(data);
+            gpsApiCallback(jsonData);
         })
         .fail(function () {
             alert("Error: Querying for gps location.");
@@ -17,17 +18,20 @@ function sendAjaxRequest() {
 
 /**
  * Callback for Franson browser request
- * @param JSON gps
+ * @param gps json
  * @constructor
  */
-function CallbackMessage(gps) {
-    if (gps.status.permitted == false) {
+function gpsApiCallback(gps) {
+    if (gps.status.permitted === false) {
         alert('Error: Request not permitted by user');
     } else {
         textToPutOnClipboard = gps.trackPoint.position.latitude + ', ' + gps.trackPoint.position.longitude;
+        chrome.browserAction.setTitle({
+            title: 'Valid:' + gps.status.valid + ', time: ' + gps.trackPoint.utc + ', precision: ' + gps.trackPoint.precision.hdop
+        });
         if (!document.execCommand('copy')) {
             alert('Error: Failed to exec copy command');
-        };
+        }
     }
 }
 
@@ -43,11 +47,11 @@ document.addEventListener('copy', function (e) {
  * Bind events
  */
 chrome.commands.onCommand.addListener(function (command) {
-    if (command == 'copy-gps-location-to-clipboard') {
+    if (command === 'copy-gps-location-to-clipboard') {
         sendAjaxRequest();
     }
 });
-chrome.browserAction.onClicked.addListener(function (tab) { //Fired when User Clicks ICON
+chrome.browserAction.onClicked.addListener(function () { //Fired when User Clicks ICON
     sendAjaxRequest();
 });
 
